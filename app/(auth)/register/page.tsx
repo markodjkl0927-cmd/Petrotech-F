@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
 import apiClient from '@/lib/api';
 
@@ -88,8 +89,14 @@ export default function RegisterPage() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-xl shadow-soft p-8 space-y-8">
           <div className="flex flex-col items-center">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-white font-bold text-lg">P</span>
+            <div className="w-24 h-24 mb-4 flex items-center justify-center">
+              <Image
+                src="/assets/logo_2.png"
+                alt="Petrotech Logo"
+                width={96}
+                height={96}
+                className="object-contain"
+              />
             </div>
             <h2 className="text-3xl font-extrabold text-gray-900">
               Create your account

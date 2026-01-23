@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
@@ -24,17 +24,13 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    fetchStats();
-  }, [mounted]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await apiClient.get('/admin/dashboard/stats');
       setStats(response.data.stats);
@@ -43,7 +39,14 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || hasFetched) return;
+    
+    setHasFetched(true);
+    fetchStats();
+  }, [mounted, hasFetched, fetchStats]);
 
   if (!mounted || loading || !stats) {
     return (
@@ -137,7 +140,7 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -149,7 +152,7 @@ export default function AdminDashboardPage() {
         {statCards.map((stat) => (
           <div
             key={stat.name}
-            className="bg-white rounded-xl border border-gray-200 p-6 shadow-soft"
+            className="bg-white rounded-xl border border-gray-200 p-6"
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -181,7 +184,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-soft">
+      <div className="bg-white rounded-xl border border-gray-200">
         <div className="px-6 py-5 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
         </div>

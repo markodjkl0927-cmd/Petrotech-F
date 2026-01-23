@@ -17,7 +17,6 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       setAuth: (user, token) => {
-        console.log('setAuth called:', { user, token });
         if (typeof window !== 'undefined') {
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(user));
@@ -25,7 +24,6 @@ export const useAuthStore = create<AuthState>()(
           document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
         }
         set({ user, token, isAuthenticated: true });
-        console.log('Auth state updated');
       },
       clearAuth: () => {
         if (typeof window !== 'undefined') {
@@ -45,20 +43,26 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: !!state.token,
       }),
       onRehydrateStorage: () => (state) => {
-        console.log('Rehydrating auth state:', state);
         if (state?.token) {
           // Try to get user from localStorage if not in state
           if (!state.user && typeof window !== 'undefined') {
             const savedUser = localStorage.getItem('user');
             if (savedUser) {
               try {
-                state.user = JSON.parse(savedUser);
+                const parsedUser = JSON.parse(savedUser);
+                // Only update if user is actually different
+                if (JSON.stringify(state.user) !== JSON.stringify(parsedUser)) {
+                  state.user = parsedUser;
+                }
               } catch (e) {
                 console.error('Failed to parse saved user:', e);
               }
             }
           }
-          state.isAuthenticated = true;
+          // Only update if state actually changed
+          if (!state.isAuthenticated) {
+            state.isAuthenticated = true;
+          }
         }
       },
     }

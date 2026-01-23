@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
 import apiClient from '@/lib/api';
 import { Order } from '@/types';
@@ -59,13 +60,32 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div className="w-full">
+      {/* Hero Section */}
+      <section className="relative w-full bg-gray-300 h-96 md:h-[450px] lg:h-[450px] flex items-center">
+        <div className="absolute inset-0 bg-gray-400">
+          <Image src="/assets/orders.jpg" alt="Petrotech Orders" fill className="object-cover" />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-12">
+          <div className="text-left">
+            <h1 className="text-4xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 text-red-600 opacity-70">
+              PETROTECH
+            </h1>
+            <p className="text-lg md:text-xl text-gray-700 max-w-2xl text-white opacity-70">
+              Track and manage your fuel delivery orders
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Orders Content */}
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
+            <h2 className="text-3xl font-bold text-gray-900">My Orders</h2>
             <Link
               href="/products"
-              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
+              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 font-medium transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
             >
               New Order
             </Link>
@@ -164,6 +184,7 @@ export default function OrdersPage() {
             </div>
           )}
         </div>
+      </div>
     </div>
   );
 }

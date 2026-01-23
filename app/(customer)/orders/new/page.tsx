@@ -241,7 +241,7 @@ export default function NewOrderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
       {/* Error Toast Notification - Top Right */}
       {showError && error && (
         <div className="fixed top-4 right-4 z-50 animate-slideIn">

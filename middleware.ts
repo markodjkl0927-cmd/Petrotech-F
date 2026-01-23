@@ -5,16 +5,12 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const { pathname } = request.nextUrl;
 
-  // Public routes - always allow
+  // Public routes - always allow access
   const publicRoutes = ['/login', '/register', '/'];
   const isPublicRoute = publicRoutes.some(route => pathname === route);
 
-  // If it's a public route, allow access
+  // If it's a public route, always allow access (let the page handle redirects if needed)
   if (isPublicRoute) {
-    // If user is already logged in and tries to access login/register, redirect to dashboard
-    if (token && (pathname === '/login' || pathname === '/register')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
     return NextResponse.next();
   }
 

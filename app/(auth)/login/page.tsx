@@ -1,18 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
 import apiClient from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
+  const { setAuth, isAuthenticated, user } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Redirect if already authenticated (only on client side)
+  useEffect(() => {
+    if (mounted && isAuthenticated && user) {
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      let redirectUrl = '/';
+      
+      if (redirectParam) {
+        redirectUrl = redirectParam;
+      } else if (user.role === 'ADMIN') {
+        redirectUrl = '/admin/dashboard';
+      } else {
+        redirectUrl = '/';
+      }
+      
+      router.push(redirectUrl);
+    }
+  }, [mounted, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +69,19 @@ export default function LoginPage() {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Force a full page reload to ensure cookie is sent with request
-      window.location.href = '/dashboard';
+      // Redirect based on user role
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      let redirectUrl = '/';
+      
+      if (redirectParam) {
+        redirectUrl = redirectParam;
+      } else if (user.role === 'ADMIN') {
+        redirectUrl = '/admin/dashboard';
+      } else {
+        redirectUrl = '/';
+      }
+      
+      window.location.href = redirectUrl;
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.response?.data?.error || 'Login failed. Please try again.');
@@ -58,8 +94,14 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-xl shadow-soft p-8 space-y-8">
           <div className="flex flex-col items-center">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-white font-bold text-lg">P</span>
+            <div className="w-32 h-32 mb-4 flex items-center justify-center">
+              <Image
+                src="/assets/logo_2.png"
+                alt="Petrotech Logo"
+                width={128}
+                height={128}
+                className="object-contain"
+              />
             </div>
             <h2 className="text-3xl font-extrabold text-gray-900">
               Sign in to Petrotech

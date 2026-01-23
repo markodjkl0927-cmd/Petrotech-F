@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
@@ -14,27 +14,22 @@ export default function DashboardPage() {
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    fetchUserData();
-    fetchRecentOrders();
-  }, [mounted]);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const response = await apiClient.get('/users/me');
       setCurrentUser(response.data.user);
     } catch (error) {
       console.error('Failed to fetch user data:', error);
     }
-  };
+  }, []);
 
-  const fetchRecentOrders = async () => {
+  const fetchRecentOrders = useCallback(async () => {
     try {
       const response = await apiClient.get('/orders?page=1&limit=5');
       setRecentOrders(response.data.orders || []);
@@ -43,7 +38,15 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || hasFetched) return;
+    
+    setHasFetched(true);
+    fetchUserData();
+    fetchRecentOrders();
+  }, [mounted, hasFetched, fetchUserData, fetchRecentOrders]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
