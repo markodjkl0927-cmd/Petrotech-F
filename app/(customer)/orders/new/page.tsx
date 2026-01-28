@@ -15,13 +15,17 @@ export default function NewOrderPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
-  const [deliveryType, setDeliveryType] = useState<'STANDARD' | 'EXPRESS'>('STANDARD');
+  const [deliveryType, setDeliveryType] = useState<'PRIVATE' | 'COMMERCIAL'>('PRIVATE');
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'PAYPAL' | 'BANK_TRANSFER'>('CARD');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [notes, setNotes] = useState('');
   const [orderItems, setOrderItems] = useState<Array<{ productId: string; quantity: number }>>([]);
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [deliveryFee, setDeliveryFee] = useState<number>(0);
+  const [tip, setTip] = useState<number>(0);
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
 
   // Address form fields (for manual entry)
   const [addressForm, setAddressForm] = useState({
@@ -82,6 +86,8 @@ export default function NewOrderPage() {
           country: defaultAddress.country || 'US',
         });
         setSelectedAddress(defaultAddress.id);
+        // Calculate distance for default address
+        calculateDistanceForAddress(defaultAddress.id);
       }
     } else if (user && !addressForm.fullName) {
       setAddressForm({
@@ -94,6 +100,47 @@ export default function NewOrderPage() {
       });
     }
   }, [addresses, user]);
+
+  // Calculate distance when address is selected
+  const calculateDistanceForAddress = async (addressId: string) => {
+    if (!addressId) {
+      setDistance(null);
+      setDeliveryFee(0);
+      return;
+    }
+
+    setCalculatingDistance(true);
+    try {
+      const response = await apiClient.get(`/addresses/${addressId}/distance`);
+      setDistance(response.data.distance);
+      setDeliveryFee(response.data.deliveryFee);
+    } catch (error: any) {
+      console.error('Failed to calculate distance:', error);
+      setDistance(null);
+      setDeliveryFee(0);
+    } finally {
+      setCalculatingDistance(false);
+    }
+  };
+
+  // Handle address selection change
+  const handleAddressChange = (addressId: string) => {
+    setSelectedAddress(addressId);
+    if (addressId) {
+      const address = addresses.find(a => a.id === addressId);
+      if (address) {
+        setAddressForm({
+          fullName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+          street: address.street || '',
+          city: address.city || '',
+          state: address.state || '',
+          zipCode: address.zipCode || '',
+          country: address.country || 'US',
+        });
+        calculateDistanceForAddress(addressId);
+      }
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -120,19 +167,40 @@ export default function NewOrderPage() {
       } else {
         setOrderItems([]);
       }
+
+      // Load delivery type from sessionStorage
+      const savedDeliveryType = sessionStorage.getItem('deliveryType');
+      if (savedDeliveryType && (savedDeliveryType === 'PRIVATE' || savedDeliveryType === 'COMMERCIAL')) {
+        setDeliveryType(savedDeliveryType);
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
     }
   };
 
-  const getOrderTotal = () => {
+  // Calculate pricing breakdown
+  // Fuel cost includes hidden 0.095% markup (not shown to customer)
+  const getFuelCost = () => {
     return orderItems.reduce((total, item) => {
       const product = products.find((p) => p.id === item.productId);
       if (product) {
-        return total + product.pricePerLiter * item.quantity;
+        // Price per liter with hidden 0.095% markup
+        const priceWithMarkup = product.pricePerLiter * 1.00095;
+        return total + priceWithMarkup * item.quantity;
       }
       return total;
     }, 0);
+  };
+
+  const getTax = () => {
+    const subtotal = getFuelCost() + deliveryFee; // Tax on fuel cost (with hidden markup) + delivery
+    return Math.round(subtotal * 0.06 * 100) / 100; // 6% tax
+  };
+
+  const getOrderTotal = () => {
+    const fuelCost = getFuelCost();
+    const tax = getTax();
+    return Math.round((fuelCost + deliveryFee + tax + tip) * 100) / 100;
   };
 
   const showErrorToast = (message: string) => {
@@ -214,19 +282,17 @@ export default function NewOrderPage() {
         addressId = newAddressRes.data.address.id;
       }
 
-      // Map delivery type: STANDARD -> PRIVATE, EXPRESS -> COMMERCIAL
-      const mappedDeliveryType = deliveryType === 'EXPRESS' ? 'COMMERCIAL' : 'PRIVATE';
-
       // Map payment method: CARD -> ONLINE, PAYPAL -> ONLINE, BANK_TRANSFER -> ONLINE
       const mappedPaymentMethod = 'ONLINE';
 
       const orderData = {
         addressId,
-        deliveryType: mappedDeliveryType,
+        deliveryType: deliveryType, // Already PRIVATE or COMMERCIAL
         paymentMethod: mappedPaymentMethod,
         deliveryDate: deliveryDate || undefined,
         items: orderItems,
         notes: notes || undefined,
+        tip: tip || 0,
       };
 
       const response = await apiClient.post('/orders', orderData);
@@ -403,29 +469,35 @@ export default function NewOrderPage() {
 
               {/* Delivery Type Card */}
               <div className="border border-gray-200 rounded-xl p-4">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Delivery Type</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Type</h2>
                 <div className="space-y-3">
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
                       name="deliveryType"
-                      value="STANDARD"
-                      checked={deliveryType === 'STANDARD'}
-                      onChange={(e) => setDeliveryType(e.target.value as 'STANDARD')}
+                      value="PRIVATE"
+                      checked={deliveryType === 'PRIVATE'}
+                      onChange={(e) => {
+                        setDeliveryType('PRIVATE');
+                        sessionStorage.setItem('deliveryType', 'PRIVATE');
+                      }}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-600 border-gray-300"
                     />
-                    <span className="ml-3 text-gray-700">Standard Delivery (3-5 business days)</span>
+                    <span className="ml-3 text-gray-700">Individual</span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
                       name="deliveryType"
-                      value="EXPRESS"
-                      checked={deliveryType === 'EXPRESS'}
-                      onChange={(e) => setDeliveryType(e.target.value as 'EXPRESS')}
+                      value="COMMERCIAL"
+                      checked={deliveryType === 'COMMERCIAL'}
+                      onChange={(e) => {
+                        setDeliveryType('COMMERCIAL');
+                        sessionStorage.setItem('deliveryType', 'COMMERCIAL');
+                      }}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-600 border-gray-300"
                     />
-                    <span className="ml-3 text-gray-700">Express Delivery (1-2 business days)</span>
+                    <span className="ml-3 text-gray-700">Commercial (Bulk Order)</span>
                   </label>
                 </div>
               </div>
@@ -454,8 +526,59 @@ export default function NewOrderPage() {
             <div className="space-y-6">
               {/* Delivery Address Card */}
               <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Delivery Address</h2>
+                  <Link
+                    href="/addresses/new?returnTo=/orders/new"
+                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                  >
+                    + Add New
+                  </Link>
+                </div>
                 <div className="space-y-4">
+                  {/* Address Selection Dropdown */}
+                  {addresses.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Saved Address
+                      </label>
+                      <select
+                        value={selectedAddress}
+                        onChange={(e) => handleAddressChange(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 text-sm"
+                      >
+                        <option value="">Select an address...</option>
+                        {addresses.map((address) => (
+                          <option key={address.id} value={address.id}>
+                            {address.label} - {address.street}, {address.city}
+                            {address.isDefault && ' (Default)'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Distance and Delivery Fee Display */}
+                  {distance !== null && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-blue-900">Distance</span>
+                        <span className="text-sm font-semibold text-blue-700">
+                          {distance.toFixed(2)} miles
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-blue-900">Delivery Fee</span>
+                        <span className="text-sm font-semibold text-blue-700">
+                          {formatCurrency(deliveryFee)}
+                        </span>
+                      </div>
+                      {calculatingDistance && (
+                        <div className="mt-2 text-xs text-blue-600">Calculating distance...</div>
+                      )}
+                    </div>
+                  )}
+
                   <input
                     type="text"
                     placeholder="Full Name"
@@ -469,7 +592,12 @@ export default function NewOrderPage() {
                     placeholder="Street Address"
                     required
                     value={addressForm.street}
-                    onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, street: e.target.value });
+                      setSelectedAddress(''); // Clear selected address when manually editing
+                      setDistance(null);
+                      setDeliveryFee(0);
+                    }}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 placeholder-gray-400 text-sm"
                   />
                   <input
@@ -477,7 +605,12 @@ export default function NewOrderPage() {
                     placeholder="City"
                     required
                     value={addressForm.city}
-                    onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, city: e.target.value });
+                      setSelectedAddress(''); // Clear selected address when manually editing
+                      setDistance(null);
+                      setDeliveryFee(0);
+                    }}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 placeholder-gray-400 text-sm"
                   />
                   <div className="grid grid-cols-2 gap-4">
@@ -504,6 +637,42 @@ export default function NewOrderPage() {
                     onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 placeholder-gray-400 text-sm"
                   />
+                  {/* Calculate Distance Button for Manual Entry */}
+                  {!selectedAddress && addressForm.street && addressForm.city && addressForm.zipCode && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        // Create temporary address to get coordinates, then calculate distance
+                        try {
+                          setCalculatingDistance(true);
+                          const tempAddressRes = await apiClient.post('/addresses', {
+                            label: 'Temp',
+                            street: addressForm.street,
+                            city: addressForm.city,
+                            state: addressForm.state,
+                            zipCode: addressForm.zipCode,
+                            country: addressForm.country,
+                            isDefault: false,
+                          });
+                          const tempAddressId = tempAddressRes.data.address.id;
+                          const distanceRes = await apiClient.get(`/addresses/${tempAddressId}/distance`);
+                          setDistance(distanceRes.data.distance);
+                          setDeliveryFee(distanceRes.data.deliveryFee);
+                          // Delete temporary address
+                          await apiClient.delete(`/addresses/${tempAddressId}`);
+                        } catch (error: any) {
+                          console.error('Failed to calculate distance:', error);
+                          showErrorToast('Failed to calculate distance. Please check your address.');
+                        } finally {
+                          setCalculatingDistance(false);
+                        }
+                      }}
+                      disabled={calculatingDistance}
+                      className="w-full px-4 py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                    >
+                      {calculatingDistance ? 'Calculating...' : 'Calculate Distance & Delivery Fee'}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -547,6 +716,23 @@ export default function NewOrderPage() {
                 </div>
               </div>
 
+              {/* Tip Card */}
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Tip for Driver (Optional)</h2>
+                <div className="space-y-3">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={tip || ''}
+                    onChange={(e) => setTip(parseFloat(e.target.value) || 0)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 text-sm"
+                  />
+                  <p className="text-xs text-gray-500">Show appreciation to your driver with an optional tip</p>
+                </div>
+              </div>
+
               {/* Notes Card */}
               <div className="bg-white border border-gray-200 rounded-xl p-4">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Notes</h2>
@@ -561,18 +747,52 @@ export default function NewOrderPage() {
             </div>
           </div>
 
-          {/* Bottom Section - Total and Submit */}
-          <div className="mt-6 bg-white border border-gray-200 rounded-xl p-4">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-lg font-semibold text-gray-900">Total</span>
-              <span className="text-2xl font-bold text-gray-900">Total: {formatCurrency(getOrderTotal())}</span>
+          {/* Bottom Section - Pricing Breakdown and Submit */}
+          <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+            
+            {/* Pricing Breakdown */}
+            <div className="space-y-3 mb-6">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Fuel Cost</span>
+                <span className="text-gray-900 font-medium">
+                  {formatCurrency(getFuelCost())}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Delivery Fee</span>
+                <span className="text-gray-900 font-medium">
+                  {distance !== null ? formatCurrency(deliveryFee) : 'Calculating...'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Tax (6%)</span>
+                <span className="text-gray-900 font-medium">
+                  {formatCurrency(getTax())}
+                </span>
+              </div>
+              {tip > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tip</span>
+                  <span className="text-gray-900 font-medium">
+                    {formatCurrency(tip)}
+                  </span>
+                </div>
+              )}
+              <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
+                <span className="text-base font-semibold text-gray-900">Total</span>
+                <span className="text-2xl font-bold text-primary-600">
+                  {formatCurrency(getOrderTotal())}
+                </span>
+              </div>
             </div>
+
             <button
               type="submit"
-              disabled={loading || orderItems.length === 0}
+              disabled={loading || orderItems.length === 0 || (distance === null && selectedAddress)}
               className="w-full bg-primary-600 text-white py-3.5 px-6 rounded-md hover:bg-primary-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base"
             >
-              {loading ? 'Submitting Order...' : 'Submit Order'}
+              {loading ? 'Submitting Order...' : 'Proceed to Payment'}
             </button>
           </div>
         </form>

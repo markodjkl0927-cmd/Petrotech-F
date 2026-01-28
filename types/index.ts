@@ -54,6 +54,12 @@ export interface Order {
   paymentMethod: 'ONLINE' | 'CASH_ON_DELIVERY' | 'CARD_ON_DELIVERY';
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
   totalAmount: number;
+  fuelCost: number; // Total fuel cost (goes to gas company)
+  companyMarkup: number; // 0.095% markup on fuel (goes to company)
+  distance?: number; // Distance in miles
+  deliveryFee: number; // Delivery fee based on distance (goes to company)
+  tax: number; // Tax amount (goes to customer/government)
+  tip: number; // Optional tip for driver
   deliveryDate?: string;
   deliveredAt?: string;
   cancelledAt?: string;
@@ -87,5 +93,6 @@ export interface CreateOrderDto {
     quantity: number;
   }>;
   notes?: string;
+  tip?: number; // Optional tip for driver
 }
 

@@ -14,6 +14,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProducts, setSelectedProducts] = useState<Record<string, number>>({});
+  const [deliveryType, setDeliveryType] = useState<'PRIVATE' | 'COMMERCIAL'>('PRIVATE');
 
   useEffect(() => {
     fetchProducts();
@@ -34,6 +35,12 @@ export default function ProductsPage() {
       } catch (error) {
         console.error('Failed to load selected products:', error);
       }
+    }
+
+    // Load delivery type from sessionStorage
+    const savedDeliveryType = sessionStorage.getItem('deliveryType');
+    if (savedDeliveryType && (savedDeliveryType === 'PRIVATE' || savedDeliveryType === 'COMMERCIAL')) {
+      setDeliveryType(savedDeliveryType);
     }
   }, []);
 
@@ -103,6 +110,7 @@ export default function ProductsPage() {
     // Set flag first, then items (to ensure flag is set before navigation)
     sessionStorage.setItem('fromProducts', 'true');
     sessionStorage.setItem('orderItems', itemsJson);
+    sessionStorage.setItem('deliveryType', deliveryType);
     
     // Verify it was saved
     const verify = sessionStorage.getItem('orderItems');
@@ -177,6 +185,43 @@ export default function ProductsPage() {
 
       {/* Products Content */}
       <div className={`max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 ${Object.keys(selectedProducts).length > 0 ? 'pb-32' : ''}`}>
+        {/* Delivery Type Toggle */}
+        <div className="mb-8 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1 inline-flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-600 px-4">Order Type:</span>
+            <button
+              type="button"
+              onClick={() => {
+                const newType = 'PRIVATE';
+                setDeliveryType(newType);
+                sessionStorage.setItem('deliveryType', newType);
+              }}
+              className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                deliveryType === 'PRIVATE'
+                  ? 'bg-primary-600 text-white shadow-md'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Individual
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const newType = 'COMMERCIAL';
+                setDeliveryType(newType);
+                sessionStorage.setItem('deliveryType', newType);
+              }}
+              className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                deliveryType === 'COMMERCIAL'
+                  ? 'bg-primary-600 text-white shadow-md'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Commercial
+            </button>
+          </div>
+        </div>
+
         {/* Products Grid */}
         {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">

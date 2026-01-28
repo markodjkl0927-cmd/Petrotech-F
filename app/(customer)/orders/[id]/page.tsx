@@ -382,19 +382,39 @@ export default function OrderDetailsPage() {
               {/* Price Breakdown */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
+                  <span className="text-gray-600">Fuel Cost</span>
                   <span className="text-gray-900 font-medium">
-                    {formatCurrency(order.totalAmount)}
+                    {formatCurrency(order.fuelCost || 0)}
+                  </span>
+                </div>
+                {order.distance && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Distance</span>
+                    <span className="text-gray-900 font-medium">
+                      {order.distance.toFixed(2)} miles
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Delivery Fee</span>
+                  <span className="text-gray-900 font-medium">
+                    {formatCurrency(order.deliveryFee || 0)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Delivery</span>
-                  <span className="text-gray-900 font-medium">Free</span>
-                </div>
-                <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tax</span>
-                  <span className="text-gray-900 font-medium">Included</span>
+                  <span className="text-gray-900 font-medium">
+                    {formatCurrency(order.tax || 0)}
+                  </span>
                 </div>
+                {order.tip && order.tip > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Tip</span>
+                    <span className="text-gray-900 font-medium">
+                      {formatCurrency(order.tip)}
+                    </span>
+                  </div>
+                )}
                 <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
                   <span className="text-base font-semibold text-gray-900">Total</span>
                   <span className="text-2xl font-bold text-primary-600">
