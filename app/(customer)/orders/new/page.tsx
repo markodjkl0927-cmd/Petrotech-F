@@ -789,7 +789,7 @@ export default function NewOrderPage() {
 
             <button
               type="submit"
-              disabled={loading || orderItems.length === 0 || (distance === null && selectedAddress)}
+              disabled={loading || orderItems.length === 0 || (distance === null && !!selectedAddress)}
               className="w-full bg-primary-600 text-white py-3.5 px-6 rounded-md hover:bg-primary-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base"
             >
               {loading ? 'Submitting Order...' : 'Proceed to Payment'}
