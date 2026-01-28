@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
@@ -12,7 +13,8 @@ import FAQSection from '@/components/FAQSection';
 import Footer from '@/components/Footer';
 
 export default function Home() {
-  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [currentHeroImage, setCurrentHeroImage] = useState(0);
   
@@ -28,6 +30,17 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (mounted && isAuthenticated && user) {
+      if (user.role === 'ADMIN') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [mounted, isAuthenticated, user, router]);
+
   // Auto-play carousel
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,6 +53,18 @@ export default function Home() {
 
   if (!mounted) {
     return null;
+  }
+
+  // Don't render homepage if user is authenticated (will redirect)
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

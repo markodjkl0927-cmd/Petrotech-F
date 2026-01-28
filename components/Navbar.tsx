@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,15 +11,42 @@ export default function Navbar() {
   const pathname = usePathname();
   const { isAuthenticated, user, clearAuth } = useAuthStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
   const handleLogout = () => {
     clearAuth();
-    router.push('/login');
+    setShowUserMenu(false);
+    router.push('/');
+  };
+
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return pathname === path;
+    }
+    return pathname.startsWith(path);
   };
 
   if (!mounted) {
@@ -27,138 +54,281 @@ export default function Navbar() {
   }
 
   return (
-      <header className="bg-white w-full sticky top-0 z-50 border-b border-gray-200 pointer-events-auto shadow-sm">
-        <div className="w-full mx-auto px-6 lg:px-12">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center flex-shrink-0">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="w-36 h-36 flex items-center justify-center relative">
-                  <Image
-                    src="/assets/logo.png"
-                    alt="Petrotech Logo"
-                    width={144}
-                    height={144}
-                    className="object-contain"
-                  />
-                </div>
-              </Link>
-            </div>
+    <header className="bg-white w-full sticky top-0 z-50 border-b border-gray-200 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          {/* Logo */}
+          <div className="flex items-center flex-shrink-0">
+            <Link 
+              href={isAuthenticated ? "/dashboard" : "/"} 
+              className="flex items-center gap-2 group"
+            >
+              <div className="relative w-32 h-12 lg:w-40 lg:h-14 flex items-center justify-center">
+                <Image
+                  src="/assets/logo.png"
+                  alt="Petrotech Logo"
+                  width={160}
+                  height={56}
+                  className="object-contain transition-transform duration-300 group-hover:scale-105"
+                  priority
+                />
+              </div>
+            </Link>
+          </div>
 
-            {/* Navigation Links - Centered */}
-            <nav className="hidden md:flex items-center justify-end flex-1 gap-8 mr-10">
-              <button
-                type="button"
-                onClick={() => router.push('/')}
-                className="text-gray-900 hover:text-gray-700 transition-all duration-200 font-medium text-sm whitespace-nowrap cursor-pointer bg-transparent border-none hover:scale-105"
-              >
-                Home
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (isAuthenticated) {
-                    router.push('/products');
-                  } else {
-                    router.push('/login?redirect=/products');
-                  }
-                }}
-                className="text-gray-900 hover:text-gray-700 transition-all duration-200 font-medium text-sm whitespace-nowrap cursor-pointer bg-transparent border-none hover:scale-105"
-              >
-                Products
-              </button>
-              {isAuthenticated && (
-                <button
-                  type="button"
-                  onClick={() => router.push('/orders')}
-                  className="text-gray-900 hover:text-gray-700 transition-colors duration-200 font-medium text-sm whitespace-nowrap cursor-pointer bg-transparent border-none"
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center justify-end flex-1 gap-1 mx-8">
+            {!isAuthenticated ? (
+              <>
+                <Link
+                  href="/"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    isActive('/') && pathname !== '/login' && pathname !== '/register'
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/products"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    isActive('/products')
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Products
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/dashboard"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    isActive('/dashboard')
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/products"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    isActive('/products')
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Products
+                </Link>
+                <Link
+                  href="/orders"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    isActive('/orders')
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  }`}
                 >
                   Orders
-                </button>
-              )}
-              {isAuthenticated && (
-                <button
-                  type="button"
-                  onClick={() => router.push('/addresses')}
-                  className="text-gray-900 hover:text-gray-700 transition-colors duration-200 font-medium text-sm whitespace-nowrap cursor-pointer bg-transparent border-none"
+                </Link>
+                <Link
+                  href="/addresses"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    isActive('/addresses')
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  }`}
                 >
                   Addresses
-                </button>
-              )}
-            </nav>
+                </Link>
+              </>
+            )}
+          </nav>
 
-            {/* User Menu / CTA Button - Right aligned */}
-            <div className="flex items-center flex-shrink-0">
-              {isAuthenticated ? (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span className="text-primary-700 font-semibold text-sm">
-                        {user?.firstName?.[0] || 'U'}{user?.lastName?.[0] || ''}
-                      </span>
-                    </div>
-                    <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium text-gray-900">
-                        {user?.firstName} {user?.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-                    </div>
-                    <svg
-                      className={`w-5 h-5 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {showUserMenu && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setShowUserMenu(false)}
-                      ></div>
-                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                        <div className="px-4 py-3 border-b border-gray-200">
-                          <p className="text-sm font-medium text-gray-900">
-                            {user?.firstName} {user?.lastName}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            <span>Sign out</span>
-                          </div>
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ) : (
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {isAuthenticated ? (
+              <div className="relative" ref={menuRef}>
                 <button
                   type="button"
-                  onClick={() => router.push('/login')}
-                  className="bg-primary-600 text-white hover:bg-primary-700 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 whitespace-nowrap cursor-pointer hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-all duration-300 group"
                 >
-                  Sign up / Login
+                  <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                    <span className="text-white font-semibold text-sm">
+                      {user?.firstName?.[0] || 'U'}{user?.lastName?.[0] || ''}
+                    </span>
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <p className="text-sm font-semibold text-gray-900 leading-tight">
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate max-w-[120px]">{user?.email}</p>
+                  </div>
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${showUserMenu ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
+
+                {/* User Dropdown Menu */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 animate-fadeIn">
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {user?.firstName} {user?.lastName}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        <span>Dashboard</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span>Sign out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center px-5 py-2.5 bg-primary-600 text-white hover:bg-primary-700 rounded-lg text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile Menu Button */}
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="lg:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {showMobileMenu ? (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               )}
-            </div>
+            </button>
           </div>
         </div>
-      </header>
+
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className="lg:hidden border-t border-gray-200 py-4 animate-slideDown">
+            <nav className="flex flex-col space-y-1">
+              {!isAuthenticated ? (
+                <>
+                  <Link
+                    href="/"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                      isActive('/') && pathname !== '/login' && pathname !== '/register'
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Home
+                  </Link>
+                  <Link
+                    href="/products"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                      isActive('/products')
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Products
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                      isActive('/dashboard')
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/products"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                      isActive('/products')
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Products
+                  </Link>
+                  <Link
+                    href="/orders"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                      isActive('/orders')
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Orders
+                  </Link>
+                  <Link
+                    href="/addresses"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                      isActive('/addresses')
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Addresses
+                  </Link>
+                </>
+              )}
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
   );
 }

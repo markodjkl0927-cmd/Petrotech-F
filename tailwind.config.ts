@@ -75,6 +75,10 @@ const config: Config = {
           '0%': { opacity: '0', transform: 'translateY(30px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        slideDown: {
+          '0%': { opacity: '0', transform: 'translateY(-10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
         bounce: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' },
@@ -92,6 +96,7 @@ const config: Config = {
         slideInLeft: 'slideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
         slideInRight: 'slideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
         slideInUp: 'slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+        slideDown: 'slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         bounce: 'bounce 1s infinite',
         shimmer: 'shimmer 2s infinite linear',
       },

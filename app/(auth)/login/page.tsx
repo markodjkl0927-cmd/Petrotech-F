@@ -25,7 +25,7 @@ export default function LoginPage() {
     if (mounted && isAuthenticated && user) {
       const redirectParam = new URLSearchParams(window.location.search).get('redirect');
       const savedRedirect = sessionStorage.getItem('redirectAfterLogin');
-      let redirectUrl = '/';
+      let redirectUrl = '/dashboard';
       
       if (redirectParam) {
         redirectUrl = redirectParam;
@@ -36,7 +36,7 @@ export default function LoginPage() {
       } else if (user.role === 'ADMIN') {
         redirectUrl = '/admin/dashboard';
       } else {
-        redirectUrl = '/';
+        redirectUrl = '/dashboard';
       }
       
       router.push(redirectUrl);
@@ -77,7 +77,7 @@ export default function LoginPage() {
       // Redirect based on user role or saved redirect
       const redirectParam = new URLSearchParams(window.location.search).get('redirect');
       const savedRedirect = sessionStorage.getItem('redirectAfterLogin');
-      let redirectUrl = '/';
+      let redirectUrl = '/dashboard';
       
       if (redirectParam) {
         redirectUrl = redirectParam;
@@ -88,7 +88,7 @@ export default function LoginPage() {
       } else if (user.role === 'ADMIN') {
         redirectUrl = '/admin/dashboard';
       } else {
-        redirectUrl = '/';
+        redirectUrl = '/dashboard';
       }
       
       window.location.href = redirectUrl;

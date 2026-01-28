@@ -191,7 +191,7 @@ export default function ProductsPage() {
                   {/* Product Image */}
                   <div className="relative w-full h-56 bg-gray-100 overflow-hidden">
                     <div className="absolute inset-0 p-4 flex items-center justify-center">
-                      <div className="relative w-full h-full max-w-[200px] bg-white rounded-lg overflow-hidden shadow-sm">
+                      <div className="relative w-full h-full bg-white rounded-lg overflow-hidden shadow-sm">
                         <Image 
                           src={getProductImage(product.name)} 
                           alt={product.name} 
