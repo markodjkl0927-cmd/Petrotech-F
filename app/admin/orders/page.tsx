@@ -176,19 +176,22 @@ export default function AdminOrdersPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDate(order.createdAt)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
-                            className="text-xs border border-gray-300 rounded px-2 py-1"
-                          >
-                            <option value="PENDING">Pending</option>
-                            <option value="CONFIRMED">Confirmed</option>
-                            <option value="DISPATCHED">Dispatched</option>
-                            <option value="IN_TRANSIT">In Transit</option>
-                            <option value="DELIVERED">Delivered</option>
-                            <option value="CANCELLED">Cancelled</option>
-                          </select>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
+                              className="text-xs border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50 transition-colors"
+                              title="Update Status"
+                            >
+                              <option value="PENDING">Pending</option>
+                              <option value="CONFIRMED">Confirmed</option>
+                              <option value="DISPATCHED">Dispatched</option>
+                              <option value="IN_TRANSIT">In Transit</option>
+                              <option value="DELIVERED">Delivered</option>
+                              <option value="CANCELLED">Cancelled</option>
+                            </select>
+                          </div>
                         </td>
                       </tr>
                     ))}

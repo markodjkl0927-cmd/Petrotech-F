@@ -43,17 +43,17 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: !!state.token,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state?.token) {
+        if (state?.token && typeof window !== 'undefined') {
+          // Sync token to cookie for middleware
+          document.cookie = `token=${state.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+          
           // Try to get user from localStorage if not in state
-          if (!state.user && typeof window !== 'undefined') {
+          if (!state.user) {
             const savedUser = localStorage.getItem('user');
             if (savedUser) {
               try {
                 const parsedUser = JSON.parse(savedUser);
-                // Only update if user is actually different
-                if (JSON.stringify(state.user) !== JSON.stringify(parsedUser)) {
-                  state.user = parsedUser;
-                }
+                state.user = parsedUser;
               } catch (e) {
                 console.error('Failed to parse saved user:', e);
               }

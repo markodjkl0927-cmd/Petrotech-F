@@ -52,7 +52,7 @@ const config: Config = {
           '100%': { transform: 'translateX(0)', opacity: '1' },
         },
         fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '0%': { opacity: '0', transform: 'translateY(30px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         fadeIn: {
@@ -60,19 +60,19 @@ const config: Config = {
           '100%': { opacity: '1' },
         },
         scaleIn: {
-          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '0%': { opacity: '0', transform: 'scale(0.9)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         slideInLeft: {
-          '0%': { opacity: '0', transform: 'translateX(-20px)' },
+          '0%': { opacity: '0', transform: 'translateX(-40px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         slideInRight: {
-          '0%': { opacity: '0', transform: 'translateX(20px)' },
+          '0%': { opacity: '0', transform: 'translateX(40px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         slideInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '0%': { opacity: '0', transform: 'translateY(30px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         bounce: {
@@ -85,13 +85,13 @@ const config: Config = {
         },
       },
       animation: {
-        slideIn: 'slideIn 0.3s ease-out',
-        fadeInUp: 'fadeInUp 0.6s ease-out',
-        fadeIn: 'fadeIn 0.5s ease-out',
-        scaleIn: 'scaleIn 0.4s ease-out',
-        slideInLeft: 'slideInLeft 0.5s ease-out',
-        slideInRight: 'slideInRight 0.5s ease-out',
-        slideInUp: 'slideInUp 0.4s ease-out',
+        slideIn: 'slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+        fadeInUp: 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+        fadeIn: 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+        scaleIn: 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+        slideInLeft: 'slideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+        slideInRight: 'slideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+        slideInUp: 'slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
         bounce: 'bounce 1s infinite',
         shimmer: 'shimmer 2s infinite linear',
       },

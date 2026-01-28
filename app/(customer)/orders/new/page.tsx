@@ -34,6 +34,14 @@ export default function NewOrderPage() {
   });
 
   useEffect(() => {
+    // Check authentication first
+    if (!isAuthenticated) {
+      // Store the current path for redirect after login
+      sessionStorage.setItem('redirectAfterLogin', '/orders/new');
+      router.push('/login');
+      return;
+    }
+
     const initializePage = async () => {
       const fromProducts = sessionStorage.getItem('fromProducts');
       
@@ -58,7 +66,7 @@ export default function NewOrderPage() {
     };
     
     initializePage();
-  }, []);
+  }, [isAuthenticated, router]);
 
   // Pre-fill address form when addresses or user data loads
   useEffect(() => {
@@ -222,11 +230,18 @@ export default function NewOrderPage() {
       };
 
       const response = await apiClient.post('/orders', orderData);
+      const createdOrder = response.data.order;
       
       sessionStorage.removeItem('orderItems');
       sessionStorage.removeItem('returnToOrder');
       
-      router.push(`/orders/${response.data.order.id}`);
+      // If payment method is ONLINE, redirect to payment page
+      if (mappedPaymentMethod === 'ONLINE') {
+        router.push(`/payment?orderId=${createdOrder.id}`);
+      } else {
+        // For other payment methods (cash on delivery), go to order page
+        router.push(`/orders/${createdOrder.id}`);
+      }
     } catch (err: any) {
       showErrorToast(err.response?.data?.error || 'Failed to place order. Please try again.');
     } finally {

@@ -48,63 +48,70 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative w-full overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400">
-        
+      <section className="relative w-full overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 min-h-[600px] lg:min-h-[700px] flex items-center">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        </div>
 
         {/* Main hero content */}
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-12 pt-16 lg:pt-24 pb-20 lg:pb-32">
-          <div className="flex gap-12 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-16 lg:py-24 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left Content - Text */}
-            <div className="relative z-10 space-y-6 lg:space-y-8 animate-fadeInUp">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full animate-fadeIn">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <div className="relative z-10 space-y-6 lg:space-y-8 text-center lg:text-left animate-fadeInUp">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full animate-fadeIn" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium text-white">Reliable Fuel Delivery Service</span>
               </div>
 
-              <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-                <span className="text-yellow-400">Petrotech</span>
-                <br />
-                <span className="text-white">Fuel Delivery</span>
+              {/* Main Heading */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] animate-fadeInUp" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+                <span className="text-yellow-400 block lg:inline">Petrotech</span>
+                <span className="text-white block lg:inline lg:ml-2">Fuel Delivery</span>
               </h1>
 
-              <p className="text-lg lg:text-xl text-white/90 leading-relaxed max-w-xl animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+              {/* Description */}
+              <p className="text-base sm:text-lg lg:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0 animate-fadeInUp" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
                 Get reliable doorstep diesel fuel delivery and EV charging services. Fast, safe, and efficient fuel delivery through web dispensing units and smart fuel containers.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-2 justify-center lg:justify-start animate-fadeInUp" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
                 <Link
                   href={isAuthenticated ? "/products" : "/login"}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white text-primary-600 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 active:scale-95"
+                  className="group inline-flex items-center justify-center px-8 py-4 bg-white text-primary-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-500 ease-out shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 active:scale-95"
                 >
                   <span>Order Fuel Now</span>
-                  <svg className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="ml-2 w-5 h-5 transition-transform duration-500 ease-out group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </Link>
                 <Link
                   href="#"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl border-2 border-white/30 hover:bg-white/20 transition-all duration-300 hover:scale-105 active:scale-95"
+                  className="inline-flex items-center justify-center px-8 py-4 bg-transparent backdrop-blur-sm text-white font-semibold rounded-xl border-2 border-white/40 hover:bg-white/10 hover:border-white/60 transition-all duration-500 ease-out hover:scale-105 active:scale-95"
                 >
                   <span>Find EV Charging</span>
                 </Link>
               </div>
 
               {/* Trust indicators */}
-              <div className="flex flex-wrap items-center gap-6 pt-6 lg:pt-8 border-t border-white/20">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-6 lg:pt-8 border-t border-white/20 animate-fadeInUp" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-green-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span className="text-sm font-medium text-white">24/7 Service</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-green-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span className="text-sm font-medium text-white">Fast Delivery</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-green-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span className="text-sm font-medium text-white">Safe & Secure</span>
@@ -113,53 +120,49 @@ export default function Home() {
             </div>
 
             {/* Right Content - Image */}
-            <div className="relative lg:absolute lg:right-12 lg:top-1/2 lg:-translate-y-1/2 lg:w-[48%] xl:w-[45%] animate-fadeInUp" style={{ animationDelay: '0.8s' }}>
-              {/* Petrotech Card - Positioned on image */}
-
-              {/* Hero Image with decorative elements */}
-              <div className="relative">
-                {/* Decorative circle background */}
-                <div className="absolute -top-4 -right-4 w-72 h-72 bg-primary-100 rounded-full blur-3xl opacity-50 -z-10 animate-pulse"></div>
+            <div className="relative w-full lg:w-auto flex justify-center lg:justify-end animate-fadeInUp" style={{ animationDelay: '1s', animationFillMode: 'both' }}>
+              <div className="relative w-full max-w-lg lg:max-w-2xl">
+                {/* Decorative gradient background */}
+                <div className="absolute -inset-4 bg-gradient-to-br from-white/20 to-white/5 rounded-3xl blur-2xl"></div>
                 
                 {/* Main image carousel */}
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-white transition-transform duration-500 hover:scale-105">
-                  <div className="w-full h-[350px] sm:h-[350px] relative bg-gradient-to-br from-blue-50 to-blue-100">
+                <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/30 transition-transform duration-700 ease-out hover:scale-[1.02] hover:shadow-3xl">
+                  <div className="w-full h-[400px] sm:h-[450px] lg:h-[500px] relative bg-gradient-to-br from-gray-100 to-gray-200">
                     {heroImages.map((image, index) => (
                       <div
                         key={index}
-                        className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
                           index === currentHeroImage ? 'opacity-100' : 'opacity-0'
                         }`}
                       >
                         <Image
                           src={image}
-                          alt={`Fuel delivery truck ${index + 1}`}
+                          alt={`Fuel delivery service ${index + 1}`}
                           fill
                           className="object-cover"
                           priority={index === 0}
-                          sizes="(max-width: 1024px) 100vw, 45vw"
+                          sizes="(max-width: 1024px) 100vw, 50vw"
                         />
                       </div>
                     ))}
                   </div>
                   
                   {/* Navigation dots */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full">
                     {heroImages.map((_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentHeroImage(index)}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        className={`rounded-full transition-all duration-500 ease-out ${
                           index === currentHeroImage
-                            ? 'bg-white w-6'
-                            : 'bg-white/50 hover:bg-white/75'
+                            ? 'bg-white w-8 h-2'
+                            : 'bg-white/50 hover:bg-white/75 w-2 h-2'
                         }`}
                         aria-label={`Go to slide ${index + 1}`}
                       />
                     ))}
                   </div>
                 </div>
-
               </div>
             </div>
           </div>

@@ -24,10 +24,15 @@ export default function LoginPage() {
   useEffect(() => {
     if (mounted && isAuthenticated && user) {
       const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      const savedRedirect = sessionStorage.getItem('redirectAfterLogin');
       let redirectUrl = '/';
       
       if (redirectParam) {
         redirectUrl = redirectParam;
+        sessionStorage.removeItem('redirectAfterLogin');
+      } else if (savedRedirect) {
+        redirectUrl = savedRedirect;
+        sessionStorage.removeItem('redirectAfterLogin');
       } else if (user.role === 'ADMIN') {
         redirectUrl = '/admin/dashboard';
       } else {
@@ -69,12 +74,17 @@ export default function LoginPage() {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Force a full page reload to ensure cookie is sent with request
-      // Redirect based on user role
+      // Redirect based on user role or saved redirect
       const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      const savedRedirect = sessionStorage.getItem('redirectAfterLogin');
       let redirectUrl = '/';
       
       if (redirectParam) {
         redirectUrl = redirectParam;
+        sessionStorage.removeItem('redirectAfterLogin');
+      } else if (savedRedirect) {
+        redirectUrl = savedRedirect;
+        sessionStorage.removeItem('redirectAfterLogin');
       } else if (user.role === 'ADMIN') {
         redirectUrl = '/admin/dashboard';
       } else {

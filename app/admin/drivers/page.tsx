@@ -13,6 +13,7 @@ export default function AdminDriversPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -22,10 +23,37 @@ export default function AdminDriversPage() {
     vehicleType: '',
     vehicleNumber: '',
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [driverToDelete, setDriverToDelete] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     fetchDrivers();
   }, []);
+
+  // Close modal on ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showForm) {
+        setShowForm(false);
+        setEditingDriver(null);
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          licenseNumber: '',
+          vehicleType: '',
+          vehicleNumber: '',
+        });
+      }
+      if (e.key === 'Escape' && showDeleteModal) {
+        setShowDeleteModal(false);
+        setDriverToDelete(null);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [showForm, showDeleteModal]);
 
   const fetchDrivers = async () => {
     try {
@@ -41,8 +69,13 @@ export default function AdminDriversPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await apiClient.post('/admin/drivers', formData);
+      if (editingDriver) {
+        await apiClient.put(`/admin/drivers/${editingDriver.id}`, formData);
+      } else {
+        await apiClient.post('/admin/drivers', formData);
+      }
       setShowForm(false);
+      setEditingDriver(null);
       setFormData({
         firstName: '',
         lastName: '',
@@ -54,7 +87,41 @@ export default function AdminDriversPage() {
       });
       fetchDrivers();
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to create driver');
+      alert(error.response?.data?.error || 'Failed to save driver');
+    }
+  };
+
+  const handleEdit = (driver: Driver) => {
+    setEditingDriver(driver);
+    setFormData({
+      firstName: driver.firstName,
+      lastName: driver.lastName,
+      email: driver.email,
+      phone: driver.phone,
+      licenseNumber: driver.licenseNumber,
+      vehicleType: driver.vehicleType,
+      vehicleNumber: driver.vehicleNumber,
+    });
+    setShowForm(true);
+  };
+
+  const handleDeleteClick = (driver: Driver) => {
+    setDriverToDelete({ id: driver.id, name: `${driver.firstName} ${driver.lastName}` });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!driverToDelete) return;
+
+    try {
+      await apiClient.delete(`/admin/drivers/${driverToDelete.id}`);
+      setShowDeleteModal(false);
+      setDriverToDelete(null);
+      fetchDrivers();
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Failed to delete driver');
+      setShowDeleteModal(false);
+      setDriverToDelete(null);
     }
   };
 
@@ -84,81 +151,275 @@ export default function AdminDriversPage() {
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Drivers</h1>
             <button
-              onClick={() => setShowForm(!showForm)}
-              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
+              onClick={() => {
+                setShowForm(true);
+                setEditingDriver(null);
+                setFormData({
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  phone: '',
+                  licenseNumber: '',
+                  vehicleType: '',
+                  vehicleNumber: '',
+                });
+              }}
+              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg font-medium flex items-center gap-2"
             >
-              {showForm ? 'Cancel' : '+ Add Driver'}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Driver
             </button>
           </div>
 
+          {/* Edit/Add Modal */}
           {showForm && (
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">Add New Driver</h2>
-              <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="First Name *"
-                  required
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="px-3 py-2 border rounded-md"
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name *"
-                  required
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="px-3 py-2 border rounded-md"
-                />
-                <input
-                  type="email"
-                  placeholder="Email *"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="px-3 py-2 border rounded-md"
-                />
-                <input
-                  type="tel"
-                  placeholder="Phone *"
-                  required
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="px-3 py-2 border rounded-md"
-                />
-                <input
-                  type="text"
-                  placeholder="License Number *"
-                  required
-                  value={formData.licenseNumber}
-                  onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                  className="px-3 py-2 border rounded-md"
-                />
-                <input
-                  type="text"
-                  placeholder="Vehicle Type (Tanker/Car) *"
-                  required
-                  value={formData.vehicleType}
-                  onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
-                  className="px-3 py-2 border rounded-md"
-                />
-                <input
-                  type="text"
-                  placeholder="Vehicle Number *"
-                  required
-                  value={formData.vehicleNumber}
-                  onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })}
-                  className="px-3 py-2 border rounded-md"
-                />
-                <button
-                  type="submit"
-                  className="col-span-2 bg-primary-600 text-white py-2 rounded-md hover:bg-primary-700 transition-colors"
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingDriver(null);
+                  setFormData({
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    phone: '',
+                    licenseNumber: '',
+                    vehicleType: '',
+                    vehicleNumber: '',
+                  });
+                }}
+              >
+                {/* Modal Content */}
+                <div
+                  className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  Create Driver
-                </button>
-              </form>
-            </div>
+                  <div className="p-6">
+                    {/* Modal Header */}
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {editingDriver ? 'Edit Driver' : 'Add New Driver'}
+                      </h2>
+                      <button
+                        onClick={() => {
+                          setShowForm(false);
+                          setEditingDriver(null);
+                          setFormData({
+                            firstName: '',
+                            lastName: '',
+                            email: '',
+                            phone: '',
+                            licenseNumber: '',
+                            vehicleType: '',
+                            vehicleNumber: '',
+                          });
+                        }}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            First Name *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter first name"
+                            required
+                            value={formData.firstName}
+                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Last Name *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter last name"
+                            required
+                            value={formData.lastName}
+                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email *
+                          </label>
+                          <input
+                            type="email"
+                            placeholder="Enter email"
+                            required
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Phone *
+                          </label>
+                          <input
+                            type="tel"
+                            placeholder="Enter phone number"
+                            required
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            License Number *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter license number"
+                            required
+                            value={formData.licenseNumber}
+                            onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Vehicle Type *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Tanker/Car"
+                            required
+                            value={formData.vehicleType}
+                            onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Vehicle Number *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter vehicle number"
+                            required
+                            value={formData.vehicleNumber}
+                            onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowForm(false);
+                            setEditingDriver(null);
+                            setFormData({
+                              firstName: '',
+                              lastName: '',
+                              email: '',
+                              phone: '',
+                              licenseNumber: '',
+                              vehicleType: '',
+                              vehicleNumber: '',
+                            });
+                          }}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors font-medium"
+                        >
+                          {editingDriver ? 'Update Driver' : 'Create Driver'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Delete Confirmation Modal */}
+          {showDeleteModal && driverToDelete && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDriverToDelete(null);
+                }}
+              >
+                {/* Modal Content */}
+                <div
+                  className="bg-white rounded-lg shadow-xl max-w-md w-full animate-scaleIn"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-6">
+                    {/* Modal Header */}
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-2xl font-bold text-gray-900">Delete Driver</h2>
+                      <button
+                        onClick={() => {
+                          setShowDeleteModal(false);
+                          setDriverToDelete(null);
+                        }}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="mb-6">
+                      <p className="text-gray-700">
+                        Are you sure you want to delete <span className="font-semibold">"{driverToDelete.name}"</span>?
+                      </p>
+                      <p className="text-sm text-red-600 mt-2">This action cannot be undone.</p>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowDeleteModal(false);
+                          setDriverToDelete(null);
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeleteConfirm}
+                        className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors font-medium"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
 
           <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -175,7 +436,7 @@ export default function AdminDriversPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {drivers.map((driver) => (
-                  <tr key={driver.id}>
+                  <tr key={driver.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       {driver.firstName} {driver.lastName}
                     </td>
@@ -195,17 +456,27 @@ export default function AdminDriversPage() {
                         {driver.isAvailable ? 'Available' : 'Unavailable'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => handleToggleAvailability(driver.id, driver.isAvailable)}
-                        className={`px-3 py-1 rounded text-xs ${
-                          driver.isAvailable
-                            ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            : 'bg-green-200 text-green-700 hover:bg-green-300'
-                        }`}
-                      >
-                        {driver.isAvailable ? 'Mark Unavailable' : 'Mark Available'}
-                      </button>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEdit(driver)}
+                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
+                          title="Edit Driver"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(driver)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="Delete Driver"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

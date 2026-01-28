@@ -63,6 +63,26 @@ export default function ProductsPage() {
   };
 
   const handleOrder = () => {
+    // Check authentication first
+    if (!isAuthenticated) {
+      // Store the current path and order items for redirect after login
+      const items = Object.entries(selectedProducts)
+        .filter(([_, quantity]) => quantity > 0)
+        .map(([productId, quantity]) => ({
+          productId,
+          quantity,
+        }));
+      
+      if (items.length > 0) {
+        sessionStorage.setItem('orderItems', JSON.stringify(items));
+        sessionStorage.setItem('fromProducts', 'true');
+      }
+      
+      sessionStorage.setItem('redirectAfterLogin', '/orders/new');
+      router.push('/login');
+      return;
+    }
+
     const items = Object.entries(selectedProducts)
       .filter(([_, quantity]) => quantity > 0) // Only include products with quantity > 0
       .map(([productId, quantity]) => ({
@@ -125,121 +145,195 @@ export default function ProductsPage() {
     );
   }
 
+  const totalItems = Object.keys(selectedProducts).reduce((sum, id) => {
+    return sum + (selectedProducts[id] || 0);
+  }, 0);
+
   return (
-    <div className="w-full">
+    <div className="w-full min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative w-full bg-gray-300 h-96 md:h-[450px] lg:h-[450px] flex items-center">
-        <div className="absolute inset-0 bg-gray-400">
-          <Image src="/assets/products.jpg" alt="Petrotech" fill className="object-cover" />
+      <section className="relative w-full h-80 md:h-96 lg:h-[450px] flex items-center overflow-hidden">
+        <div className="absolute inset-0">
+          <Image 
+            src="/assets/products.jpg" 
+            alt="Petrotech Products" 
+            fill 
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
         </div>
-        {/* Temporary gray background - will be replaced with image */}
         <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-12">
-          <div className="text-left">
-            <h1 className="text-4xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 text-red-600 opacity-70">
-              PETROTECH
+          <div className="text-left max-w-2xl">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 animate-fadeInUp">
+              Our Products
             </h1>
-            <p className="text-lg md:text-xl text-gray-700 max-w-2xl text-white opacity-70">
-              Choose from our wide range of high-quality fuel products
+            <p className="text-lg md:text-xl text-white/90 max-w-xl animate-fadeInUp" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+              Choose from our wide range of high-quality fuel products delivered right to your doorstep
             </p>
           </div>
         </div>
       </section>
 
       {/* Products Content */}
-      <div className={`max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 ${Object.keys(selectedProducts).length > 0 ? 'pb-24' : ''}`}>
-        <div className="px-4 py-6 sm:px-0">
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {products.map((product, index) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-lg border border-gray-300 transition-all duration-300 overflow-hidden flex flex-col animate-fadeInUp hover:shadow-lg hover:-translate-y-1"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {/* Product Image Section - Light gray background with rounded corners */}
-                <div className="p-4 flex items-center justify-center min-h-[220px]">
-                  <div className="relative w-full h-52 bg-white rounded-md overflow-hidden group">
-                    <Image 
-                      src={getProductImage(product.name)} 
-                      alt={product.name} 
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
+      <div className={`max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 ${Object.keys(selectedProducts).length > 0 ? 'pb-32' : ''}`}>
+        {/* Products Grid */}
+        {products.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+            {products.map((product, index) => {
+              const quantity = selectedProducts[product.id] || 0;
+              return (
+                <div
+                  key={product.id}
+                  className="group bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden flex flex-col transition-all duration-500 ease-out hover:shadow-lg hover:-translate-y-1 animate-fadeInUp"
+                  style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
+                >
+                  {/* Product Image */}
+                  <div className="relative w-full h-56 bg-gray-100 overflow-hidden">
+                    <div className="absolute inset-0 p-4 flex items-center justify-center">
+                      <div className="relative w-full h-full max-w-[200px] bg-white rounded-lg overflow-hidden shadow-sm">
+                        <Image 
+                          src={getProductImage(product.name)} 
+                          alt={product.name} 
+                          fill
+                          className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                        />
+                      </div>
+                    </div>
+                    {/* Badge for selected items */}
+                    {quantity > 0 && (
+                      <div className="absolute top-4 right-4 bg-primary-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-sm shadow-lg animate-scaleIn z-10">
+                        {quantity}
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* Product Information Section */}
-                <div className="p-6 flex flex-col flex-grow space-y-4">
-                  {/* Product Name */}
-                  <h3 className="text-xl font-bold text-gray-900 leading-tight">
-                    {product.name}
-                  </h3>
-                  
-                  {/* Description */}
-                  {product.description && (
-                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 min-h-[2.5rem]">
-                      {product.description}
-                    </p>
-                  )}
+                  {/* Product Information */}
+                  <div className="p-6 flex flex-col flex-grow space-y-4">
+                    {/* Product Name */}
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 leading-tight mb-2">
+                        {product.name}
+                      </h3>
+                      {product.description && (
+                        <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 min-h-[2.5rem]">
+                          {product.description}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Price */}
-                  <p className="text-2xl font-bold text-primary-600">
-                    {formatCurrency(product.pricePerLiter)}
-                  </p>
+                    {/* Price */}
+                    <div className="pt-3 border-t border-gray-100">
+                      <p className="text-2xl font-bold text-primary-600">
+                        {formatCurrency(product.pricePerLiter)}
+                        <span className="text-sm font-normal text-gray-500 ml-1">/liter</span>
+                      </p>
+                    </div>
 
-                  {/* Quantity Selector */}
-                  <div className="flex items-center gap-2">
+                    {/* Quantity Selector */}
+                    <div className="pt-3">
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Quantity
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleQuantityChange(product.id, quantity - 1)}
+                          disabled={quantity === 0}
+                          className="w-10 h-10 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-300 font-bold text-xl leading-none active:scale-95 hover:scale-105 disabled:hover:scale-100"
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={quantity}
+                          onChange={(e) => handleQuantityChange(product.id, Math.max(0, parseInt(e.target.value) || 0))}
+                          className="w-16 h-10 px-2 border-2 border-gray-300 rounded-md text-center text-gray-900 font-semibold text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleQuantityChange(product.id, quantity + 1)}
+                          className="w-10 h-10 rounded-md bg-primary-600 text-white hover:bg-primary-700 flex items-center justify-center transition-all duration-300 font-bold text-xl leading-none active:scale-95 hover:scale-105 shadow-md hover:shadow-lg"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Add to Cart Button */}
                     <button
                       type="button"
-                      onClick={() => handleQuantityChange(product.id, (selectedProducts[product.id] || 0) - 1)}
-                      disabled={!selectedProducts[product.id] || selectedProducts[product.id] === 0}
-                      className="w-10 h-10 rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 font-bold text-xl leading-none active:scale-95 hover:scale-105"
+                      onClick={() => {
+                        if (quantity === 0) {
+                          handleQuantityChange(product.id, 1);
+                        }
+                      }}
+                      className={`mt-auto w-full py-3 px-4 rounded-lg font-semibold text-base transition-all duration-300 ${
+                        quantity > 0
+                          ? 'bg-green-600 text-white cursor-default'
+                          : 'bg-primary-600 text-white hover:bg-primary-700 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'
+                      }`}
                     >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min="0"
-                      value={selectedProducts[product.id] || 0}
-                      onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 0)}
-                      className="w-16 h-10 px-2 border border-gray-300 rounded-md text-center text-gray-900 font-medium text-base focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600 transition-all duration-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleQuantityChange(product.id, (selectedProducts[product.id] || 0) + 1)}
-                      className="w-10 h-10 rounded-md bg-primary-600 text-white hover:bg-primary-700 flex items-center justify-center transition-all duration-200 font-bold text-xl leading-none active:scale-95 hover:scale-105"
-                    >
-                      +
+                      {quantity > 0 ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Added to Cart
+                        </span>
+                      ) : (
+                        'Add to Cart'
+                      )}
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-
-          {products.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No products available at the moment.</p>
+        ) : (
+          <div className="text-center py-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
             </div>
-          )}
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products available</h3>
+            <p className="text-gray-500">Check back later for our latest fuel products.</p>
+          </div>
+        )}
 
-          {Object.keys(selectedProducts).length > 0 && (
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 animate-slideInUp">
-              <div className="max-w-7xl mx-auto flex justify-between items-center">
-                <div className="animate-fadeIn">
-                  <p className="text-sm text-gray-600">Total Items: {Object.keys(selectedProducts).length}</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(getTotalPrice())}</p>
+        {/* Fixed Checkout Bar */}
+        {Object.keys(selectedProducts).length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-2xl z-50 animate-slideInUp">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Total Items</p>
+                      <p className="text-2xl font-bold text-gray-900">{totalItems}</p>
+                    </div>
+                    <div className="h-12 w-px bg-gray-300"></div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Total Price</p>
+                      <p className="text-2xl font-bold text-primary-600">{formatCurrency(getTotalPrice())}</p>
+                    </div>
+                  </div>
                 </div>
                 <button
                   onClick={handleOrder}
-                  className="bg-primary-600 text-white px-8 py-3 rounded-md hover:bg-primary-700 font-medium transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                  className="w-full sm:w-auto bg-primary-600 text-white px-8 py-4 rounded-xl hover:bg-primary-700 font-semibold transition-all duration-500 ease-out hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-w-[200px]"
                 >
-                  Proceed to Checkout
+                  <span>Proceed to Checkout</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
