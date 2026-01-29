@@ -21,8 +21,25 @@ export default function LoginPage() {
   }, []);
 
   // Redirect if already authenticated (only on client side)
+  // But ensure cookie is set first to avoid redirect loop
   useEffect(() => {
-    if (mounted && isAuthenticated && user) {
+    if (!mounted) return;
+    
+    // Check if we have a token in localStorage
+    const localToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    
+    // Only redirect if we have BOTH token and user
+    if (isAuthenticated && user && localToken) {
+      // Ensure cookie is set before redirecting
+      const cookies = document.cookie.split(';');
+      const tokenCookie = cookies.find(c => c.trim().startsWith('token='));
+      const cookieToken = tokenCookie?.split('=')[1];
+      
+      // Always set cookie to ensure it's there (even if it exists, refresh it)
+      const expiresIn = 7 * 24 * 60 * 60; // 7 days
+      document.cookie = `token=${localToken}; path=/; max-age=${expiresIn}; SameSite=Lax`;
+      
+      // Determine redirect URL
       const redirectParam = new URLSearchParams(window.location.search).get('redirect');
       const savedRedirect = sessionStorage.getItem('redirectAfterLogin');
       let redirectUrl = '/dashboard';
@@ -39,9 +56,11 @@ export default function LoginPage() {
         redirectUrl = '/dashboard';
       }
       
-      router.push(redirectUrl);
+      // Use window.location.href for full page reload to ensure cookie is sent with request
+      // This ensures middleware can see the cookie on the next request
+      window.location.href = redirectUrl;
     }
-  }, [mounted, isAuthenticated, user, router]);
+  }, [mounted, isAuthenticated, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,18 +81,13 @@ export default function LoginPage() {
 
       console.log('Setting auth:', { user, token });
       
-      // Set token in cookie FIRST (before setting state)
-      const expiresIn = 7 * 24 * 60 * 60; // 7 days in seconds
-      document.cookie = `token=${token}; path=/; max-age=${expiresIn}; SameSite=Lax`;
-      console.log('Cookie set, verifying:', document.cookie.includes('token'));
-      
-      // Set auth state
+      // Set auth state (this also sets the cookie)
       setAuth(user, token);
       
-      // Wait for cookie to be set
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Also set cookie explicitly to ensure it's set
+      const expiresIn = 7 * 24 * 60 * 60; // 7 days in seconds
+      document.cookie = `token=${token}; path=/; max-age=${expiresIn}; SameSite=Lax`;
       
-      // Force a full page reload to ensure cookie is sent with request
       // Redirect based on user role or saved redirect
       const redirectParam = new URLSearchParams(window.location.search).get('redirect');
       const savedRedirect = sessionStorage.getItem('redirectAfterLogin');
@@ -91,6 +105,7 @@ export default function LoginPage() {
         redirectUrl = '/dashboard';
       }
       
+      // Use window.location.href for full page reload to ensure cookie is sent
       window.location.href = redirectUrl;
     } catch (err: any) {
       console.error('Login error:', err);

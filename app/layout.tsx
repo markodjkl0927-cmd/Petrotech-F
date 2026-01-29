@@ -17,6 +17,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Inline script to sync cookie IMMEDIATELY before React hydrates */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+                  try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                      const expiresIn = 7 * 24 * 60 * 60; // 7 days
+                      document.cookie = 'token=' + token + '; path=/; max-age=' + expiresIn + '; SameSite=Lax';
+                    }
+                  } catch (e) {
+                    // Silently fail if localStorage is not available
+                  }
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
         <AuthSync />
         {children}

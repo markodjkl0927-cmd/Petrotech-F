@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
+import ProtectedLink from './ProtectedLink';
 
 export default function Navbar() {
   const router = useRouter();
@@ -143,6 +144,16 @@ export default function Navbar() {
                 >
                   Addresses
                 </Link>
+                <ProtectedLink
+                  href="/ev-charging"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    isActive('/ev-charging')
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  }`}
+                >
+                  EV Charging
+                </ProtectedLink>
               </>
             )}
           </nav>
@@ -323,6 +334,17 @@ export default function Navbar() {
                   >
                     Addresses
                   </Link>
+                  <ProtectedLink
+                    href="/ev-charging"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                      isActive('/ev-charging')
+                        ? 'text-primary-600 bg-primary-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    EV Charging
+                  </ProtectedLink>
                 </>
               )}
             </nav>

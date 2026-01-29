@@ -96,3 +96,71 @@ export interface CreateOrderDto {
   tip?: number; // Optional tip for driver
 }
 
+export interface Car {
+  id: string;
+  userId: string;
+  make: string;
+  model: string;
+  year?: number;
+  connectorType: string; // "CCS", "CHAdeMO", "Tesla", "Type 2"
+  batteryCapacity?: number;
+  licensePlate?: string;
+  color?: string;
+  nickname?: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChargingOrder {
+  id: string;
+  userId: string;
+  addressId: string;
+  address: Address;
+  driverId?: string;
+  driver?: Driver;
+  chargingUnitId?: string;
+  chargingUnit?: {
+    id: string;
+    name: string;
+    type: string;
+    connectorType: string;
+    maxPower?: number;
+  };
+  orderNumber: string;
+  chargingDuration: 'ONE_HOUR' | 'TWO_HOURS' | 'FIVE_HOURS' | 'TWENTY_FOUR_HOURS';
+  numberOfCars: number;
+  baseFee: number;
+  deliveryFee: number;
+  distance: number;
+  tax: number;
+  tip: number;
+  totalAmount: number;
+  status: 'PENDING' | 'CONFIRMED' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  paymentMethod: 'ONLINE' | 'CASH_ON_DELIVERY' | 'CARD_ON_DELIVERY';
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  scheduledAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  notes?: string;
+  cars: Array<{
+    id: string;
+    car: Car;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChargingOrderDto {
+  addressId: string;
+  chargingDuration: 'ONE_HOUR' | 'TWO_HOURS' | 'FIVE_HOURS' | 'TWENTY_FOUR_HOURS';
+  numberOfCars: number;
+  carIds: string[];
+  paymentMethod: 'ONLINE' | 'CASH_ON_DELIVERY' | 'CARD_ON_DELIVERY';
+  scheduledAt?: string;
+  notes?: string;
+  tip?: number;
+}
+

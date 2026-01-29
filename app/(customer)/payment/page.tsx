@@ -12,12 +12,23 @@ import {
 import { useAuthStore } from '@/lib/store';
 import apiClient from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
-import { Order } from '@/types';
+import { ChargingOrder, Order } from '@/types';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
-function CheckoutForm({ order, clientSecret }: { order: Order; clientSecret: string }) {
+type PaymentOrderType = 'fuel' | 'charging';
+type PayableOrder = Order | ChargingOrder;
+
+function CheckoutForm({
+  order,
+  clientSecret,
+  orderType,
+}: {
+  order: PayableOrder;
+  clientSecret: string;
+  orderType: PaymentOrderType;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -88,7 +99,7 @@ function CheckoutForm({ order, clientSecret }: { order: Order; clientSecret: str
   };
 
   const handleViewOrder = () => {
-    router.push(`/orders/${order.id}?payment=success`);
+    router.push(orderType === 'charging' ? `/ev-charging/${order.id}?payment=success` : `/orders/${order.id}?payment=success`);
   };
 
   const cardElementOptions = {
@@ -312,12 +323,13 @@ export default function PaymentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuthStore();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<PayableOrder | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const orderId = searchParams.get('orderId');
+  const orderType: PaymentOrderType = searchParams.get('type') === 'charging' ? 'charging' : 'fuel';
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -334,12 +346,14 @@ export default function PaymentPage() {
     const initializePayment = async () => {
       try {
         // Fetch order details
-        const orderRes = await apiClient.get(`/orders/${orderId}`);
-        const orderData = orderRes.data.order;
+        const orderData =
+          orderType === 'charging'
+            ? (await apiClient.get(`/charging/${orderId}`)).data
+            : (await apiClient.get(`/orders/${orderId}`)).data.order;
 
         // Check if order is already paid
         if (orderData.paymentStatus === 'PAID') {
-          router.push(`/orders/${orderId}`);
+          router.push(orderType === 'charging' ? `/ev-charging/${orderId}` : `/orders/${orderId}`);
           return;
         }
 
@@ -348,6 +362,7 @@ export default function PaymentPage() {
         // Create payment intent
         const paymentRes = await apiClient.post('/payments/create-intent', {
           orderId: orderId,
+          type: orderType,
         });
 
         setClientSecret(paymentRes.data.clientSecret);
@@ -360,7 +375,7 @@ export default function PaymentPage() {
     };
 
     initializePayment();
-  }, [orderId, isAuthenticated, router]);
+  }, [orderId, orderType, isAuthenticated, router]);
 
   if (loading) {
     return (
@@ -385,10 +400,10 @@ export default function PaymentPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-2">Payment Error</h2>
           <p className="text-gray-600 mb-6">{error || 'Failed to initialize payment'}</p>
           <button
-            onClick={() => router.push('/orders')}
+            onClick={() => router.push(orderType === 'charging' ? '/ev-charging' : '/orders')}
             className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 transition-colors"
           >
-            Go to Orders
+            {orderType === 'charging' ? 'Go to EV Charging' : 'Go to Orders'}
           </button>
         </div>
       </div>
@@ -441,7 +456,7 @@ export default function PaymentPage() {
               </div>
 
               <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <CheckoutForm order={order} clientSecret={clientSecret} />
+                <CheckoutForm order={order} clientSecret={clientSecret} orderType={orderType} />
               </Elements>
             </div>
           </div>
@@ -455,26 +470,35 @@ export default function PaymentPage() {
               
               {/* Order Items */}
               <div className="space-y-4 mb-6">
-                {order.orderItems?.map((item, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
+                {orderType === 'fuel' && 'orderItems' in order ? (
+                  order.orderItems.map((item, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {item.product?.name}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {item.quantity}L × {formatCurrency(item.price)}
+                        </p>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {formatCurrency(item.subtotal)}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {item.product?.name}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {item.quantity}L × {formatCurrency(item.price)}
-                      </p>
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {formatCurrency(item.subtotal)}
-                    </div>
+                  ))
+                ) : orderType === 'charging' && 'chargingDuration' in order ? (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold text-gray-900">EV Charging</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {order.numberOfCars} car{order.numberOfCars > 1 ? 's' : ''} • {order.chargingDuration.replaceAll('_', ' ')}
+                    </p>
                   </div>
-                ))}
+                ) : null}
               </div>
 
               {/* Price Breakdown */}

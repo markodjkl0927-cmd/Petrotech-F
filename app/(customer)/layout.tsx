@@ -24,26 +24,16 @@ export default function CustomerLayout({
   useEffect(() => {
     if (!mounted || hasCheckedAuth.current) return;
     
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-    // Only redirect if we're not already on the target page
-    if (!isAuthenticated && !token && pathname !== '/login') {
-      hasCheckedAuth.current = true;
-      router.push('/login');
-      return;
-    }
-
+    // Only handle admin redirect - let middleware handle authentication
     if (user?.role === 'ADMIN' && !pathname.startsWith('/admin')) {
       hasCheckedAuth.current = true;
       router.push('/admin/dashboard');
       return;
     }
 
-    // Mark as checked if we have valid auth
-    if ((isAuthenticated || token) && user?.role !== 'ADMIN') {
-      hasCheckedAuth.current = true;
-    }
-  }, [mounted, isAuthenticated, user?.role, pathname]);
+    // Mark as checked
+    hasCheckedAuth.current = true;
+  }, [mounted, user?.role, pathname, router]);
 
   if (!mounted) {
     return (

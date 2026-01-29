@@ -114,7 +114,7 @@ export default function Home() {
                   </svg>
                 </Link>
                 <Link
-                  href="#"
+                  href={isAuthenticated ? "/ev-charging" : "/login?redirect=/ev-charging"}
                   className="inline-flex items-center justify-center px-8 py-4 bg-transparent backdrop-blur-sm text-white font-semibold rounded-xl border-2 border-white/40 hover:bg-white/10 hover:border-white/60 transition-all duration-500 ease-out hover:scale-105 active:scale-95"
                 >
                   <span>Find EV Charging</span>
