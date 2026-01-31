@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
@@ -17,6 +17,9 @@ export default function ChargingOrderDetailsPage() {
   const [cancelling, setCancelling] = useState(false);
   const [tracking, setTracking] = useState<any | null>(null);
   const [trackingError, setTrackingError] = useState<string | null>(null);
+  const [trackingPlace, setTrackingPlace] = useState<string | null>(null);
+  const [trackingPlaceLoading, setTrackingPlaceLoading] = useState(false);
+  const trackingPlaceKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Ensure cookie is synced before making API calls
@@ -69,6 +72,51 @@ export default function ChargingOrderDetailsPage() {
       if (timer) clearTimeout(timer);
     };
   }, [order?.id, order?.driverId, order?.status]);
+
+  useEffect(() => {
+    const loc = tracking?.location;
+    if (!loc?.latitude || !loc?.longitude) return;
+    const key = `${Number(loc.latitude).toFixed(4)},${Number(loc.longitude).toFixed(4)}`;
+    if (trackingPlaceKeyRef.current === key) return;
+
+    trackingPlaceKeyRef.current = key;
+    setTrackingPlaceLoading(true);
+    setTrackingPlace(null);
+
+    const controller = new AbortController();
+    apiClient
+      .get(`/tracking/reverse`, {
+        params: { lat: loc.latitude, lng: loc.longitude },
+        timeout: 6500,
+        signal: controller.signal as any,
+      })
+      .then((res) => {
+        setTrackingPlace(res.data?.place || null);
+      })
+      .catch(() => {
+        // ignore (timeout / abort / network)
+        setTrackingPlace(null);
+      })
+      .finally(() => {
+        setTrackingPlaceLoading(false);
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [tracking?.location?.latitude, tracking?.location?.longitude]);
+
+  const formatRelativeAge = (iso?: string) => {
+    if (!iso) return null;
+    const ms = Date.now() - new Date(iso).getTime();
+    if (!Number.isFinite(ms) || ms < 0) return null;
+    const s = Math.floor(ms / 1000);
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    return `${h}h ago`;
+  };
 
   const fetchOrder = async (orderId: string) => {
     try {
@@ -282,10 +330,22 @@ export default function ChargingOrderDetailsPage() {
                     <p>
                       <span className="font-medium">Last update:</span>{' '}
                       {tracking.location.updatedAt ? formatDateTime(tracking.location.updatedAt) : '—'}
+                      {tracking.location.updatedAt ? (
+                        <span className="text-gray-500">
+                          {' '}
+                          ({formatRelativeAge(tracking.location.updatedAt) || 'just now'})
+                        </span>
+                      ) : null}
                     </p>
-                    <p>
-                      <span className="font-medium">Driver location:</span>{' '}
-                      {tracking.location.latitude.toFixed(5)}, {tracking.location.longitude.toFixed(5)}
+                    <p className="text-base font-semibold text-gray-900">
+                      Near:{' '}
+                      {trackingPlaceLoading ? (
+                        <span className="text-gray-600 font-medium">Resolving area…</span>
+                      ) : trackingPlace ? (
+                        trackingPlace
+                      ) : (
+                        <span className="text-gray-600 font-medium">Location available</span>
+                      )}
                     </p>
                     <a
                       className="inline-flex items-center gap-2 mt-2 text-primary-600 hover:text-primary-700 font-medium"
@@ -298,6 +358,14 @@ export default function ChargingOrderDetailsPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7v7m0-7L10 14m-1 7H3v-6" />
                       </svg>
                     </a>
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs text-gray-500 select-none">
+                        Advanced (coordinates)
+                      </summary>
+                      <div className="mt-2 text-xs text-gray-600">
+                        {Number(tracking.location.latitude).toFixed(5)}, {Number(tracking.location.longitude).toFixed(5)}
+                      </div>
+                    </details>
                     <p className="text-xs text-gray-500">
                       MVP: location updates while the driver app is active.
                     </p>
