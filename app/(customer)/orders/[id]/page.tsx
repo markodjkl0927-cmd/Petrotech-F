@@ -17,6 +17,8 @@ export default function OrderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [tracking, setTracking] = useState<any | null>(null);
+  const [trackingError, setTrackingError] = useState<string | null>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -32,6 +34,38 @@ export default function OrderDetailsPage() {
       setTimeout(() => setShowPaymentSuccess(false), 5000);
     }
   }, [params.id, searchParams, router]);
+
+  useEffect(() => {
+    if (!order?.id) return;
+    if (!order.driverId) return;
+
+    const isActive = order.status === "DISPATCHED" || order.status === "IN_TRANSIT";
+    if (!isActive) return;
+
+    let mounted = true;
+    let timer: any;
+
+    const fetchTracking = async () => {
+      try {
+        setTrackingError(null);
+        const res = await apiClient.get(`/orders/${order.id}/tracking`);
+        if (!mounted) return;
+        setTracking(res.data?.tracking || null);
+      } catch (e: any) {
+        if (!mounted) return;
+        setTrackingError(e?.response?.data?.error || e?.message || "Failed to load tracking");
+      } finally {
+        if (!mounted) return;
+        timer = setTimeout(fetchTracking, 10000);
+      }
+    };
+
+    fetchTracking();
+    return () => {
+      mounted = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [order?.id, order?.driverId, order?.status]);
 
   const fetchOrder = async (orderId: string) => {
     try {
@@ -369,6 +403,54 @@ export default function OrderDetailsPage() {
                     Vehicle: {order.driver.vehicleType} ({order.driver.vehicleNumber})
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Live Tracking (MVP) */}
+            {order.driver && (order.status === "DISPATCHED" || order.status === "IN_TRANSIT") && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21s-6-5.686-6-10a6 6 0 1112 0c0 4.314-6 10-6 10z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11a1 1 0 100-2 1 1 0 000 2z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Live Tracking</h2>
+                </div>
+
+                {trackingError ? (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    {trackingError}
+                  </div>
+                ) : tracking?.location ? (
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p>
+                      <span className="font-medium">Last update:</span>{" "}
+                      {tracking.location.updatedAt ? formatDateTime(tracking.location.updatedAt) : "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Driver location:</span>{" "}
+                      {tracking.location.latitude.toFixed(5)}, {tracking.location.longitude.toFixed(5)}
+                    </p>
+                    <a
+                      className="inline-flex items-center gap-2 mt-2 text-primary-600 hover:text-primary-700 font-medium"
+                      href={`https://www.google.com/maps?q=${tracking.location.latitude},${tracking.location.longitude}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open in Maps
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7v7m0-7L10 14m-1 7H3v-6" />
+                      </svg>
+                    </a>
+                    <p className="text-xs text-gray-500">
+                      MVP: location updates while the driver app is active.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">Waiting for driver location…</p>
+                )}
               </div>
             )}
           </div>
