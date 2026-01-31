@@ -25,6 +25,10 @@ export default function AdminDriversPage() {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [inviteDriverName, setInviteDriverName] = useState<string>('');
 
   useEffect(() => {
     fetchDrivers();
@@ -50,10 +54,16 @@ export default function AdminDriversPage() {
         setShowDeleteModal(false);
         setDriverToDelete(null);
       }
+      if (e.key === 'Escape' && showInviteModal) {
+        setShowInviteModal(false);
+        setInviteLink(null);
+        setInviteCopied(false);
+        setInviteDriverName('');
+      }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [showForm, showDeleteModal]);
+  }, [showForm, showDeleteModal, showInviteModal]);
 
   const fetchDrivers = async () => {
     try {
@@ -131,6 +141,29 @@ export default function AdminDriversPage() {
       fetchDrivers();
     } catch (error: any) {
       alert(error.response?.data?.error || 'Failed to update driver');
+    }
+  };
+
+  const handleGenerateInvite = async (driver: Driver) => {
+    try {
+      const res = await apiClient.post(`/admin/drivers/${driver.id}/invite`, {});
+      const token: string | undefined = res.data?.token;
+      if (!token) throw new Error('Invite token was not returned');
+
+      const link = `${window.location.origin}/driver/activate?token=${encodeURIComponent(token)}`;
+      setInviteDriverName(`${driver.firstName} ${driver.lastName}`);
+      setInviteLink(link);
+      setInviteCopied(false);
+      setShowInviteModal(true);
+
+      try {
+        await navigator.clipboard.writeText(link);
+        setInviteCopied(true);
+      } catch {
+        // Clipboard may be unavailable on some browsers / insecure contexts.
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.error || error.message || 'Failed to generate invite link');
     }
   };
 
@@ -422,6 +455,77 @@ export default function AdminDriversPage() {
             </>
           )}
 
+          {/* Invite Link Modal */}
+          {showInviteModal && inviteLink && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setInviteLink(null);
+                  setInviteCopied(false);
+                  setInviteDriverName('');
+                }}
+              >
+                <div
+                  className="bg-white rounded-lg shadow-xl max-w-xl w-full animate-scaleIn"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-2xl font-bold text-gray-900">Invite link</h2>
+                      <button
+                        onClick={() => {
+                          setShowInviteModal(false);
+                          setInviteLink(null);
+                          setInviteCopied(false);
+                          setInviteDriverName('');
+                        }}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <p className="text-sm text-gray-700">
+                      Send this link to <span className="font-semibold">{inviteDriverName}</span> so they can set (or reset) their password.
+                    </p>
+
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Invite link</label>
+                      <div className="flex gap-2">
+                        <input
+                          value={inviteLink}
+                          readOnly
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(inviteLink);
+                              setInviteCopied(true);
+                            } catch {
+                              alert('Copy failed. Please copy the link manually.');
+                            }
+                          }}
+                          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      {inviteCopied ? <p className="mt-2 text-sm text-green-700">Copied to clipboard.</p> : null}
+                      <p className="mt-2 text-xs text-gray-500">MVP: we’re not sending email/SMS automatically yet.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -458,6 +562,20 @@ export default function AdminDriversPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleGenerateInvite(driver)}
+                          className="p-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          title="Generate invite link"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.828 10.172a4 4 0 010 5.656m-1.414-1.414a2 2 0 000-2.828m-2.828 2.828l-2.121 2.121a4 4 0 01-5.657-5.657l2.121-2.121m2.828-2.828l2.121-2.121a4 4 0 015.657 5.657l-2.121 2.121"
+                            />
+                          </svg>
+                        </button>
                         <button
                           onClick={() => handleEdit(driver)}
                           className="p-2 text-primary-600 hover:bg-primary-50 rounded-md transition-colors"
