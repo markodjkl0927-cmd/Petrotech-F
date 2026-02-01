@@ -89,7 +89,17 @@ export default function Navbar() {
                       : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                   }`}
                 >
-                  Home
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10.5l9-7 9 7V20a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1v-9.5z"
+                      />
+                    </svg>
+                    Home
+                  </span>
                 </Link>
                 <Link
                   href="/products"
@@ -99,7 +109,17 @@ export default function Navbar() {
                       : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                   }`}
                 >
-                  Products
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
+                      />
+                    </svg>
+                    Products
+                  </span>
                 </Link>
               </>
             ) : (
@@ -112,7 +132,17 @@ export default function Navbar() {
                       : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                   }`}
                 >
-                  Dashboard
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"
+                      />
+                    </svg>
+                    Dashboard
+                  </span>
                 </Link>
                 <Link
                   href="/products"
@@ -122,7 +152,17 @@ export default function Navbar() {
                       : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                   }`}
                 >
-                  Products
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
+                      />
+                    </svg>
+                    Products
+                  </span>
                 </Link>
                 <ProtectedLink
                   href="/ev-charging"
@@ -132,7 +172,23 @@ export default function Navbar() {
                       : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                   }`}
                 >
-                  EV Charging
+                  <span className="inline-flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 2L4.5 13H11l-1 9 9.5-12H13l0-8z"
+                      />
+                    </svg>
+                    EV Charging
+                  </span>
                 </ProtectedLink>
                 <Link
                   href="/orders"
@@ -142,7 +198,17 @@ export default function Navbar() {
                       : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                   }`}
                 >
-                  Orders
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h10M7 11h10M7 15h6M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z"
+                      />
+                    </svg>
+                    Orders
+                  </span>
                 </Link>
                 <Link
                   href="/addresses"
@@ -152,7 +218,18 @@ export default function Navbar() {
                       : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
                   }`}
                 >
-                  Addresses
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 21s-6-5.686-6-10a6 6 0 1112 0c0 4.314-6 10-6 10z"
+                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11a2 2 0 100-4 2 2 0 000 4z" />
+                    </svg>
+                    Addresses
+                  </span>
                 </Link>
               </>
             )}
@@ -274,7 +351,17 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    Home
+                    <span className="inline-flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 10.5l9-7 9 7V20a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1v-9.5z"
+                        />
+                      </svg>
+                      Home
+                    </span>
                   </Link>
                   <Link
                     href="/products"
@@ -285,7 +372,17 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    Products
+                    <span className="inline-flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
+                        />
+                      </svg>
+                      Products
+                    </span>
                   </Link>
                 </>
               ) : (
@@ -299,7 +396,17 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    Dashboard
+                    <span className="inline-flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"
+                        />
+                      </svg>
+                      Dashboard
+                    </span>
                   </Link>
                   <Link
                     href="/products"
@@ -310,7 +417,17 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    Products
+                    <span className="inline-flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
+                        />
+                      </svg>
+                      Products
+                    </span>
                   </Link>
                   <Link
                     href="/orders"
@@ -321,7 +438,17 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    Orders
+                    <span className="inline-flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 7h10M7 11h10M7 15h6M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z"
+                        />
+                      </svg>
+                      Orders
+                    </span>
                   </Link>
                   <Link
                     href="/addresses"
@@ -332,7 +459,18 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    Addresses
+                    <span className="inline-flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 21s-6-5.686-6-10a6 6 0 1112 0c0 4.314-6 10-6 10z"
+                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11a2 2 0 100-4 2 2 0 000 4z" />
+                      </svg>
+                      Addresses
+                    </span>
                   </Link>
                   <ProtectedLink
                     href="/ev-charging"
@@ -343,7 +481,23 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    EV Charging
+                    <span className="inline-flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 2L4.5 13H11l-1 9 9.5-12H13l0-8z"
+                        />
+                      </svg>
+                      EV Charging
+                    </span>
                   </ProtectedLink>
                 </>
               )}
