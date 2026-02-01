@@ -94,7 +94,7 @@ export default function EVChargingPage() {
       <section className="relative w-full h-80 md:h-96 lg:h-[450px] flex items-center overflow-hidden">
         <div className="absolute inset-0">
           <Image 
-            src="/assets/products.jpg" 
+            src="/assets/ev-charging.jpg" 
             alt="EV Charging" 
             fill 
             className="object-cover"
